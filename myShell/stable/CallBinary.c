@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include "debugPrint.h"
 #include <unistd.h>
 #include <stdio.h>
 #include <fcntl.h>
@@ -7,18 +6,23 @@
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <sys/wait.h>
+#include "debugPrint.h"
+#include "CallBinary.h"
 
 int CallBinary(char* const comandLine[]);
 int WaitForChild(pid_t childPID);
 
 //TODO: improve return values
+//TODO: delete main
 
 int main()
 {
     DEBUG_PRINT("precall\n");
-    char * arr[3]={"shit", "something"};
-    CallBinary(arr);
+    char * arr[3]={"date",/* "something" */};
+    CallBinary(arr);   
     DEBUG_PRINT("after call\n");
+    printf("is it gonna be white?\n");
+    UNEXPECTED_PRINT("is this gonna be red?\n");
 }
 
 

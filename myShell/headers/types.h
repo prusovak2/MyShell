@@ -1,6 +1,6 @@
  typedef enum Tdelimiters
 {
-    reLeft, reRigt, reRigtAppend, pipeChar, semicolumn, newLine
+    reLeft, reRight, reRightAppend, pipeChar, semicolon, newLine
 } delimiters;
 
 typedef struct TCMD
