@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdlib.h>
+#include <err.h>
 #include <sys/wait.h>
 #include "debugPrint.h"
 #include "CallBinary.h"
@@ -15,16 +16,16 @@ int WaitForChild(pid_t childPID);
 //TODO: improve return values
 //TODO: delete main
 
-int main()
+/*int main()
 {
     DEBUG_PRINT("precall\n");
-    char * arr[3]={"date",/* "something" */};
+    char * arr[3]={"date"};
     CallBinary(arr);   
     DEBUG_PRINT("after call\n");
     printf("is it gonna be white?\n");
     UNEXPECTED_PRINT("is this gonna be red?\n");
 }
-
+*/
 
 
 int CallBinary(char * const comandLine[])
@@ -32,7 +33,7 @@ int CallBinary(char * const comandLine[])
     pid_t pid = fork();
     if(pid ==-1)
     {
-        DEBUG_PRINT("CallBInary: forking child failed\n");
+        warnx("CallBInary: forking child failed\n");
         return -1;
     }
     else if(pid==0)
@@ -45,7 +46,7 @@ int CallBinary(char * const comandLine[])
             DEBUG_PRINT("CallBinary: execvp(%s, args) failed\n", comandLine[0]);
             return 127;
         }
-        exit(0); //call succesfull
+        exit(0); //no exec happend, exit child - invalid command
     }
     
     int ret = WaitForChild(pid);
@@ -80,6 +81,7 @@ int WaitForChild(pid_t childPID)
 
     DEBUG_PRINT("waiting finished\n");
 
+    //change to return valid value
     if(! WIFEXITED(wstatus) ||  0!= WEXITSTATUS(wstatus))
     {
         DEBUG_PRINT("WaitForChild: child has terminated in unusual way\n");

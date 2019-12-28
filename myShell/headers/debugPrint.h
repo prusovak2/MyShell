@@ -1,8 +1,12 @@
+ #ifndef MY_DEBUG_PRINT_H
+ #define MY_DEBUG_PRINT_H //to prevent double declaration of stuff
 //#include <stdio.h>
+
 #define COLOR_BLUE    "\x1b[36m"
 #define COLOR_RESET   "\x1b[0m"
 #define COLOR_RED     "\x1B[31m"
 #define COLOR_GREEN   "\x1B[32m"
+#include <stdio.h>
 
 #define DEBUG 
 
@@ -30,4 +34,6 @@
 # define DEBUG_PRINT(toPrint...) do {} while (0)
 # define UNEXPECTED_PRINT(toPrint...) do {} while(0)
 # define UNEXPECTED_PRINT_GREEN(toPrint...) do {} while(0)
+#endif
+
 #endif
