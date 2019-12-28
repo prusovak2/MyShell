@@ -74,7 +74,7 @@ int WaitForChild(pid_t childPID)
     if(ret == -1)
     {
         UNEXPECTED_PRINT("waitForChild: error while waiting\n");
-        return -1;
+        return 1;
     }
 
     DEBUG_PRINT("waiting finished\n");
@@ -93,7 +93,7 @@ int WaitForChild(pid_t childPID)
         return ret;
     }
     UNEXPECTED_PRINT("Wait for child: end of main was reached even thou it should not be!!!!");
-    return -1;
+    return 1;
 
 
 }
