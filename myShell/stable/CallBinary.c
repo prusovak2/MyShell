@@ -10,45 +10,43 @@
 #include "debugPrint.h"
 #include "CallBinary.h"
 
-int CallBinary(char* const comandLine[]);
-int WaitForChild(pid_t childPID);
-
-//TODO: improve return values
 //TODO: delete main
 
 /*int main()
 {
     DEBUG_PRINT("precall\n");
-    char * arr[3]={"date"};
-    CallBinary(arr);   
+    char * arr[3]={"sleep", "20"};
+    int ret = CallBinary(arr);   
     DEBUG_PRINT("after call\n");
     printf("is it gonna be white?\n");
     UNEXPECTED_PRINT("is this gonna be red?\n");
+    return ret;
 }
 */
-
 
 int CallBinary(char * const comandLine[])
 {
     pid_t pid = fork();
+    
     if(pid ==-1)
     {
-        warnx("CallBInary: forking child failed\n");
+        warnx("CallBinary: forking child failed\n");
         return -1;
     }
     else if(pid==0)
     {
         //child
-        DEBUG_PRINT("preparing to execute child\n");
+        DEBUG_PRINT("CallBin: preparing to execute child\n");
         int execErr =execvp(comandLine[0],comandLine);
         if(execErr==-1)
         {
             DEBUG_PRINT("CallBinary: execvp(%s, args) failed\n", comandLine[0]);
             return 127;
         }
-        exit(0); //no exec happend, exit child - invalid command
+        exit(127); //no exec happend, exit child - invalid command
     }
-    
+    //parent
+    DEBUG_PRINT("Child pid is: %d\n", pid);
     int ret = WaitForChild(pid);
     return  ret;
 
@@ -75,19 +73,27 @@ int WaitForChild(pid_t childPID)
 
     if(ret == -1)
     {
-        DEBUG_PRINT("waitForChild: error while waiting\n");
+        UNEXPECTED_PRINT("waitForChild: error while waiting\n");
         return -1;
     }
 
     DEBUG_PRINT("waiting finished\n");
 
-    //change to return valid value
-    if(! WIFEXITED(wstatus) ||  0!= WEXITSTATUS(wstatus))
+    //take care of return value:
+    if(WIFEXITED(wstatus))
     {
-        DEBUG_PRINT("WaitForChild: child has terminated in unusual way\n");
-        return -1;
+        //child exited normally- either by calling exit() or by returning from main
+        ret = WEXITSTATUS(wstatus); //exit status of child
+        return ret;
     }
-    return 0;
+    if(WIFSIGNALED(wstatus))
+    {
+        //child terminated by signal
+        ret = WTERMSIG(wstatus) + 128; //ret val= sinal num + 128
+        return ret;
+    }
+    UNEXPECTED_PRINT("Wait for child: end of main was reached even thou it should not be!!!!");
+    return -1;
 
 
 }
