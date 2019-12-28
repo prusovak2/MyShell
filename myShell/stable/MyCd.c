@@ -10,6 +10,8 @@
 #include "debugPrint.h"
 #include "safeAlloc.h"
 
+//TODO: check whether OLDPWD is initialized
+
 /*returns 0 when change of dir successful, 1 otherwise*/
 int MyCd(CMD cmd)
 {

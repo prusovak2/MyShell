@@ -1,12 +1,13 @@
 #include <string.h>
 #include <stdlib.h>
 #include <err.h>
+#include <stdio.h>
 #include "MyExit.h"
 #include "types.h"
 #include "debugPrint.h"
 #include "safeAlloc.h"
 
-int main()
+/*int main()
 {
     CMD * c1;
     SAFE_MALLOC(c1,1);
@@ -16,7 +17,7 @@ int main()
     c1->tokens= toks;
 
     MyExit(*c1, 73); 
-}
+}*/
 
 int MyExit(CMD cmd, int lastCmdRetVal)
 {
@@ -32,6 +33,7 @@ int MyExit(CMD cmd, int lastCmdRetVal)
         if(cmd.tokenCount==1)
         {
             //exit without argument - exit with last cmd ret. val
+            UNEXPECTED_PRINT("EXITING");
             exit(lastCmdRetVal);
         }
         /*else if(cmd.tokenCount==2)

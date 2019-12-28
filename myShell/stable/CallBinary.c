@@ -31,7 +31,7 @@ int CallBinary(char * const comandLine[])
     if(pid ==-1)
     {
         warnx("CallBinary: forking child failed\n");
-        return -1;
+        return 1;
     }
     else if(pid==0)
     {
@@ -41,7 +41,9 @@ int CallBinary(char * const comandLine[])
         if(execErr==-1)
         {
             DEBUG_PRINT("CallBinary: execvp(%s, args) failed\n", comandLine[0]);
-            return 127;
+            warnx("command not found: %s", comandLine[0] );
+            //return 127;
+            exit (127);
         }
         exit(127); //no exec happend, exit child - invalid command
     }
