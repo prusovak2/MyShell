@@ -1,11 +1,15 @@
 #include <unistd.h>
 #include <getopt.h>
+#include <stdio.h>
+#include <err.h>
+#include <stdlib.h>
 
 #include "debugPrint.h"
 #include "types.h"
 #include "FlexReadCmds.h"
 #include "ExecCmd.h"
 #include "delimToString.h"
+#include "MyShell.h"
 
 int main(int argc, char ** argv)
 {
@@ -53,19 +57,24 @@ int ExecLine(char * line, int * lastRetVal, int lineNum)
         {
             DEBUG_PRINT("%s ", (cmds+i)->tokens[j]);
         }
-        char * del = delimToString((cmds+i)->delim);
+        #ifdef DEBUG
+            char * del = delimToString((cmds+i)->delim);
+        #endif // DEBUG
+        
         DEBUG_PRINT("delim:%s \n", del);
     }
     DEBUG_PRINT("\n\n");
     UNEXPECTED_PRINT("***********EXECUTING CMDS******************\n");
 
     //execute cmds
+    int ret;
     for(int i = 0; i < cmdCount; i++)
     {
-        int ret =ExecCmd(cmds, *(cmds+i), lastRetVal, lineNum);
+        ret =ExecCmd(cmds, *(cmds+i), lastRetVal, lineNum);
 
         DEBUG_PRINT("ret val of execCmd: %d\n", ret);
     }
 
     free(cmds);
+    return ret;
 }

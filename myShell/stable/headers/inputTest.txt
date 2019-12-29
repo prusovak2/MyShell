@@ -1,0 +1,5 @@
+echo haf mnau; date > cat ;
+echo haf     >> neco | necojineho
+#some awesome comment
+grep <
+cat;cat
