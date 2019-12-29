@@ -150,7 +150,7 @@ CMD * ReadCMDs(char * cmdLine, int * commandCount)
 
     /*extract CMDs from que to CMD array*/
     CMD * cmdArr;
-    SAFE_MALLOC(cmdArr, (cmdCount+1)); /*alloc space for cmds including terminating null*/
+    SAFE_MALLOC(cmdArr, (cmdCount)); /*+1 deleted!!! no terminating null*/
 
     int i =0;    
     struct command * iterator;

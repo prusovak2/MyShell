@@ -19,7 +19,7 @@
     MyExit(*c1, 73); 
 }*/
 
-int MyExit(CMD cmd, int lastCmdRetVal)
+int MyExit(CMD* cmdPointer, CMD cmd, int lastCmdRetVal)
 {
     int actuallyExit = strcmp(cmd.tokens[0], "exit");
     DEBUG_PRINT("tokens[0]: %s, actuallyExit: %d\n", cmd.tokens[0], actuallyExit);
@@ -34,6 +34,7 @@ int MyExit(CMD cmd, int lastCmdRetVal)
         {
             //exit without argument - exit with last cmd ret. val
             UNEXPECTED_PRINT("EXITING");
+            free(cmdPointer);
             exit(lastCmdRetVal);
         }
         /*else if(cmd.tokenCount==2)
