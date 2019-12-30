@@ -5,6 +5,7 @@
 #include <getopt.h>
 #include <err.h>
 #include <stdlib.h>
+#include <signal.h> 
 
 #include "debugPrint.h"
 #include "safeAlloc.h"
@@ -14,12 +15,14 @@
 #include "delimToString.h"
 #include "MyShell.h"
 
+
+void handle_sigint(int sig);
+
+int lastRetVal =0;
 int main(int argc, char ** argv)
 {
-   // char * line = readline("mysh>");
-    //printf("%s\n", line);
+    signal(SIGINT, handle_sigint);
 
-    int lastRetVal =0;
     int option;
    // put ':' at the starting of the string so compiler can distinguish between '?' and ':'
    while((option = getopt(argc, argv, ":c:")) != -1)
@@ -70,11 +73,18 @@ int main(int argc, char ** argv)
        free(prompt);
        DEBUG_PRINT_GREEN("LINE: %s\n", line);
 
+       if(line==NULL)
+       {
+           DEBUG_PRINT("CTRL+D at the beggining of line, exiting\n");
+           exit(lastRetVal);
+       }
+
        //add history
        add_history(line);
        //exec cmds
        ExecLine(line, &lastRetVal, 1);
    }
+
    return lastRetVal;
    
 }
@@ -117,3 +127,15 @@ int ExecLine(char * line, int * lastRetVal, int lineNum)
     free(cmds);
     return ret;
 }
+
+
+
+void handle_sigint(int sig) 
+{ 
+    UNEXPECTED_PRINT(" CTRL+C IN PROMPT");
+    printf("\n"); // Move to a new line
+    rl_on_new_line(); // Regenerate the prompt on  newline
+    rl_replace_line("", 0); // Clear the previous text
+    rl_redisplay();
+    lastRetVal= 128 + sig; 
+} 

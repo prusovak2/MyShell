@@ -2,13 +2,17 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <fcntl.h>
+#include <signal.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <err.h>
 #include <sys/wait.h>
+
 #include "debugPrint.h"
 #include "CallBinary.h"
+
+void handle_sigint_child(int sig);
 
 //TODO: delete main
 
@@ -23,11 +27,15 @@
     return ret;
 }
 */
+pid_t childPid;
 
 int CallBinary(char * const comandLine[])
 {
+    signal(SIGINT, handle_sigint_child);
     pid_t pid = fork();
     
+    childPid = pid;
+
     if(pid ==-1)
     {
         warnx("CallBinary: forking child failed\n");
@@ -98,4 +106,11 @@ int WaitForChild(pid_t childPID)
     return 1;
 
 
+}
+
+void handle_sigint_child(int sig) 
+{ 
+  UNEXPECTED_PRINT("handle SIGINT FROM CHILD\n");
+  warnx("Killed by signal %d", sig);
+  kill(childPid, sig); 
 }

@@ -45,6 +45,7 @@ int MyCd(CMD cmd)
             //cd -     go to OLDPWD
             char * oldPwd = getenv("OLDPWD");
             DEBUG_PRINT_GREEN("cd %s   -OLDPWD\n", oldPwd);
+            printf("%s\n", oldPwd);
             int ret = Cd(oldPwd);
 
             //free(oldPwd);
