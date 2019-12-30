@@ -142,7 +142,7 @@ CMD * ReadCMDs(char * cmdLine, int * commandCount)
     yy_scan_string(cmdLine);  //TODO: uncomment!
     yylex();
 
-    /*no delim after the last cmd, some unprosessed tokens remaining in token que*/
+    /*no delim after the last cmd, some unprocessed tokens remaining in token que*/
     if(tokCount>0)
     {
         AddCommand(newLine);
@@ -189,7 +189,9 @@ CMD * ReadCMDs(char * cmdLine, int * commandCount)
 
 
     *commandCount = cmdCount;
+    cmdCount=0;
     yylex_destroy();
+    DEBUG_PRINT_GREEN("LEAVING READCMDs, CMD count local: %d, cmd count returned %d", cmdCount, *commandCount);
     return cmdArr;
 }
 
