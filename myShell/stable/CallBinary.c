@@ -11,6 +11,7 @@
 
 #include "debugPrint.h"
 #include "CallBinary.h"
+#include "MyShell.h"
 
 void handle_sigint_child(int sig);
 
@@ -41,8 +42,9 @@ int CallBinary(char * const comandLine[])
         warnx("CallBinary: forking child failed\n");
         return 1;
     }
-    else if(pid==0)
+    else if(pid==0)    
     {
+        
         //child
         DEBUG_PRINT("CallBin: preparing to execute child\n");
         int execErr =execvp(comandLine[0],comandLine);
@@ -52,12 +54,13 @@ int CallBinary(char * const comandLine[])
             warnx("command not found: %s", comandLine[0] );
             //return 127;
             exit (127);
-        }
+        }        
         exit(127); //no exec happend, exit child - invalid command
     }
     //parent
     DEBUG_PRINT("Child pid is: %d\n", pid);
     int ret = WaitForChild(pid);
+    signal(SIGINT, handle_sigint);
     return  ret;
 
 

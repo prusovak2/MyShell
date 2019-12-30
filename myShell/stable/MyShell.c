@@ -6,6 +6,9 @@
 #include <err.h>
 #include <stdlib.h>
 #include <signal.h> 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include "debugPrint.h"
 #include "safeAlloc.h"
@@ -14,6 +17,7 @@
 #include "ExecCmd.h"
 #include "delimToString.h"
 #include "MyShell.h"
+#include "ReadLineFromFile.h"
 
 
 void handle_sigint(int sig);
@@ -24,7 +28,7 @@ int main(int argc, char ** argv)
     signal(SIGINT, handle_sigint);
 
     int option;
-   // put ':' at the starting of the string so compiler can distinguish between '?' and ':'
+   //  ':' at the starting of the string so compiler can distinguish between '?' and ':'
    while((option = getopt(argc, argv, ":c:")) != -1)
    { 
       switch(option)
@@ -44,14 +48,28 @@ int main(int argc, char ** argv)
       }
    }
 
-   //TODO: solve cases with file arg and wihout args reading stdin 
-   if (argc==2){ //when some extra arguments are passed
-      printf("Given extra arguments: %s\n", argv[optind]);
-      //read file
-      return 1; //solve ret val - ret val of last cmd
+   
+   if (optind<argc)
+   { 
+       //***************************INPUT FROM FILE********************
+      DEBUG_PRINT("READING FILE: %s\n", argv[optind]);
+        //read file
+        int fd = open(argv[optind], O_RDONLY);
+        int ret;
+        char * line=NULL;
+        int lineNum =1;
+        while((ret=ReadLineFromFile(&line, fd))!=-1)
+        {
+            DEBUG_PRINT_GREEN("Myshell: line: %s\n", line);
+            ExecLine(line,&lastRetVal,lineNum);
+            free(line);
+            lineNum++;
+        }
+      return lastRetVal; //ret val of last cmd
    }
+   
 
-    //***************INTERACTIVE SHELL********************8
+    //***************INTERACTIVE SHELL********************
    while (1)
    {
        //create prompt
