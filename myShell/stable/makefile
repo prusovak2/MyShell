@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -g #remove -g
+CFLAGS = -Wall -Wextra 
 FLEXFLAGS = -lfl
 DFLAGS = -D DEBUG
 INCLUDE = -I headers 
@@ -12,11 +12,11 @@ all: mysh
 .PHONY : all clean 
 
 mysh: $(OBJ) 
-	$(CC) $(CFLAGS) $(INCLUDE) $(FLEXFLAGS) $(OBJ) -o mysh $(READLINE)
-
+	$(CC) $(CFLAGS) $(INCLUDE) $(OBJ) -o mysh $(FLEXFLAGS) $(READLINE)
+	
 lex.yy.o: FlexReadCmds.c
 	flex FlexReadCmds.c
-	$(CC) $(CFLAGS) $(INCLUDE) $(FLEXFLAGS) -c lex.yy.c -o lex.yy.o $(READLINE)
+	$(CC) $(CFLAGS) $(INCLUDE) -c lex.yy.c -o lex.yy.o $(FLEXFLAGS)  $(READLINE)
 
 #specify dependencies between object files and source files
 %.o : %.c
