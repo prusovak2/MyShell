@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra
+CFLAGS = -Wall -Wextra -g #remove -g
 FLEXFLAGS = -lfl
 DFLAGS = -D DEBUG
 INCLUDE = -I headers 

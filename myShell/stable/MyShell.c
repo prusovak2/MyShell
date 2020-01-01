@@ -55,16 +55,18 @@ int main(int argc, char ** argv)
       DEBUG_PRINT("READING FILE: %s\n", argv[optind]);
         //read file
         int fd = open(argv[optind], O_RDONLY);
-        int ret;
         char * line=NULL;
+        int retVal=1;
         int lineNum =1;
-        while((ret=ReadLineFromFile(&line, fd))!=-1)
+        while(retVal!=-1)
         {
+            line = ReadLineFromFile(&retVal, fd);
             DEBUG_PRINT_GREEN("Myshell: line: %s\n", line);
             ExecLine(line,&lastRetVal,lineNum);
             free(line);
             lineNum++;
         }
+        close(fd);
       return lastRetVal; //ret val of last cmd
    }
    
@@ -141,6 +143,19 @@ int ExecLine(char * line, int * lastRetVal, int lineNum)
 
         DEBUG_PRINT("ret val of execCmd: %d\n", ret);
     }
+
+/*
+    for(int i=cmdCount-1;i>=0; i-- )
+    {
+        int tokCount =cmds[i].tokenCount;
+        for (int j = 0; j < tokCount+1; j++)
+        {
+            UNEXPECTED_PRINT("execline: freeing %s \n", cmds[i].tokens[j]);
+            free(cmds[i].tokens[j]);
+        }
+        free(cmds[i].tokens);
+        free(cmds+i);
+    }*/
 
     free(cmds);
     return ret;

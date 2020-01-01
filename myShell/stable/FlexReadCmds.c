@@ -92,8 +92,12 @@ int cmdCount=0;
     //DEBUG_PRINT("%d\n", yytext[yyleng]); //yytext null terminated
    
     char * word = NULL;
-    SAFE_MALLOC(word, yyleng);
+    SAFE_MALLOC(word, yyleng+1);
+    
     strcpy(word, yytext);  /*strcpy(destination, source)*/
+
+    //int len = strlen(word);
+    //UNEXPECTED_PRINT("word: %s, yyleng: %d, len: %d\n", word, yyleng, len);
     //DEBUG_PRINT("Copied string: %s\n", word);
     AddToken(word); 
     free(word);
@@ -181,7 +185,7 @@ CMD * ReadCMDs(char * cmdLine, int * commandCount)
     struct command * p;
     while (!TAILQ_EMPTY(&commandHead))
      {
-        p = TAILQ_FIRST(&commandHead);
+        p = TAILQ_FIRST(&commandHead);        
         TAILQ_REMOVE(&commandHead, p, tailCommand);
         free(p);
         p=NULL;
@@ -202,7 +206,7 @@ void AddToken(char* word)
 
     char * copiedWord = NULL;
     int lenght = strlen(word); /*returns lenght including terminating null char*/
-    SAFE_MALLOC(copiedWord, lenght);
+    SAFE_MALLOC(copiedWord, (lenght+1));
     strcpy(copiedWord, word);
 
     newTok->tokenItself=copiedWord;
@@ -216,7 +220,7 @@ void AddCommand(delimiters delimiter)
 {   
     /*prepare string array for tokens of which command consists*/
     char ** toks=NULL;
-    SAFE_MALLOC(toks, tokCount+1);
+    SAFE_MALLOC(toks, (tokCount+1));  //+1
 
     /*prepare CMD - structure to store command*/
     CMD  * newCMD;
@@ -233,13 +237,13 @@ void AddCommand(delimiters delimiter)
     }
     
    // UNEXPECTED_PRINT("%s\n", *(toks+tokCount-1));
-    (*(toks+tokCount))=NULL;
+    (*(toks+tokCount))=(char*)NULL;
 
     /*free token queue*/
     struct token * p;
     while (!TAILQ_EMPTY(&tokenHead))
     {
-        p = TAILQ_FIRST(&tokenHead);
+        p = TAILQ_FIRST(&tokenHead);        
         TAILQ_REMOVE(&tokenHead, p, tailToken);
         free(p);
         p=NULL;
