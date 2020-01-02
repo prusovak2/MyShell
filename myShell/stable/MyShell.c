@@ -144,7 +144,7 @@ int ExecLine(char * line, int * lastRetVal, int lineNum)
         DEBUG_PRINT("ret val of execCmd: %d\n", ret);
     }
 
-/*
+
     for(int i=cmdCount-1;i>=0; i-- )
     {
         int tokCount =cmds[i].tokenCount;
@@ -154,8 +154,8 @@ int ExecLine(char * line, int * lastRetVal, int lineNum)
             free(cmds[i].tokens[j]);
         }
         free(cmds[i].tokens);
-        free(cmds+i);
-    }*/
+        //free(cmds+i);
+    }
 
     free(cmds);
     return ret;

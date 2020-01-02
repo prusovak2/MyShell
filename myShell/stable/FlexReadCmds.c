@@ -208,7 +208,7 @@ void AddToken(char* word)
     SAFE_MALLOC(newTok, 1);
 
     char * copiedWord = NULL;
-    int lenght = strlen(word); /*returns lenght including terminating null char*/
+    int lenght = strlen(word); /*returns lenght excluding terminating null char*/
     SAFE_MALLOC(copiedWord, (lenght+1));
     strcpy(copiedWord, word);
 
