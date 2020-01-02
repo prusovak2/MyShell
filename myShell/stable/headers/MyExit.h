@@ -2,6 +2,6 @@
 #define MY_EXIT_H
 #include "types.h"
 
-int MyExit(CMD * cmdPointer, CMD cmd, int lastCmdRetVal);
+int MyExit(CMD** cmdPointer, CMD cmd, int lastCmdRetVal, int cmdCount);
 
 #endif 

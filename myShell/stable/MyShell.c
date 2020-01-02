@@ -63,7 +63,7 @@ int main(int argc, char ** argv)
             line = ReadLineFromFile(&retVal, fd);
             DEBUG_PRINT_GREEN("Myshell: line: %s\n", line);
             ExecLine(line,&lastRetVal,lineNum);
-            free(line);
+            //free(line);
             lineNum++;
         }
         close(fd);
@@ -101,10 +101,12 @@ int main(int argc, char ** argv)
 
        //add history
        add_history(line);
-       //exec cmds
+
+       //exec cmds +free line
        ExecLine(line, &lastRetVal, 1);
    }
 
+    rl_clear_history();
    return lastRetVal;
    
 }
@@ -114,20 +116,23 @@ int ExecLine(char * line, int * lastRetVal, int lineNum)
     //convert command line to an array of CMDs    
     int cmdCount = 0;
     DEBUG_PRINT("Myshell: ENTERING execLine, cmdCount: %d\n", cmdCount);
-    CMD * cmds = ReadCMDs(line, &cmdCount);
+    CMD ** Pcmds = ReadCMDs(line, &cmdCount);
+    free(line);
+    //CMD * cmds = *Pcmds;
 
     //just debug print
     DEBUG_PRINT_GREEN("EXEC LINE: printing cmds read:");
     DEBUG_PRINT_GREEN("cmdCount: %d\n", cmdCount);
     for (int i = 0; i < cmdCount; i++)
     {
-        DEBUG_PRINT("cmd #%d, tokenCount: %d\n", i, (cmds+i)->tokenCount);
-        for(int j = 0; j < (cmds+i)->tokenCount; j++)
+        CMD * curr = *(Pcmds+i);
+        DEBUG_PRINT("cmd #%d, tokenCount: %d\n", i, curr->tokenCount);
+        for(int j = 0; j < curr->tokenCount; j++)
         {
-            DEBUG_PRINT("%s ", (cmds+i)->tokens[j]);
+            DEBUG_PRINT("%s ", curr->tokens[j]);
         }
         #ifdef DEBUG
-            char * del = delimToString((cmds+i)->delim);
+            char * del = delimToString(curr->delim);
         #endif // DEBUG
         
         DEBUG_PRINT("delim:%s \n", del);
@@ -139,26 +144,32 @@ int ExecLine(char * line, int * lastRetVal, int lineNum)
     int ret;
     for(int i = 0; i < cmdCount; i++)
     {
-        ret =ExecCmd(cmds, *(cmds+i), lastRetVal, lineNum);
+        CMD * curr = *(Pcmds+i);
+        ret =ExecCmd(Pcmds, *curr, lastRetVal, lineNum, cmdCount);
 
         DEBUG_PRINT("ret val of execCmd: %d\n", ret);
     }
+    
+    freeCmds(Pcmds, cmdCount);
+    return ret;
+}
 
-
-    for(int i=cmdCount-1;i>=0; i-- )
+void freeCmds(CMD ** Pcmds, int cmdCount)
+{
+    for(int i = 0; i < cmdCount; i++)   
     {
-        int tokCount =cmds[i].tokenCount;
+        CMD * curr = *(Pcmds+i);
+        int tokCount =curr->tokenCount;
         for (int j = 0; j < tokCount+1; j++)
         {
-            UNEXPECTED_PRINT("execline: freeing %s \n", cmds[i].tokens[j]);
-            free(cmds[i].tokens[j]);
+            UNEXPECTED_PRINT("execline: freeing %s \n", curr->tokens[j]);
+            free(curr->tokens[j]);
         }
-        free(cmds[i].tokens);
-        //free(cmds+i);
+        free(curr->tokens);
+        free(*(Pcmds+i));
     }
 
-    free(cmds);
-    return ret;
+    free(Pcmds);
 }
 
 

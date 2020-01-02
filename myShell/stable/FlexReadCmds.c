@@ -25,7 +25,7 @@ struct token
 struct command
 {
     TAILQ_ENTRY(command) tailCommand;
-    CMD commandItself;
+    CMD * commandItself;
 };
 
 /*define a structures that will act as the container for link list elements */
@@ -141,7 +141,7 @@ int cmdCount=0;
     
 } */
 
-CMD * ReadCMDs(char * cmdLine, int * commandCount)
+CMD ** ReadCMDs(char * cmdLine, int * commandCount)
 {
     TAILQ_INIT(&tokenHead);
     TAILQ_INIT(&commandHead);
@@ -156,14 +156,14 @@ CMD * ReadCMDs(char * cmdLine, int * commandCount)
     }
 
     /*extract CMDs from que to CMD array*/
-    CMD * cmdArr;
+    CMD ** cmdArr;
     SAFE_MALLOC(cmdArr, (cmdCount)); /*+1 deleted!!! no terminating null*/
 
     int i =0;    
     struct command * iterator;
     TAILQ_FOREACH(iterator, &commandHead, tailCommand)
     {
-        *(cmdArr+i)=iterator->commandItself;
+        *(cmdArr+i)=(iterator->commandItself);
         i++;       
     }
 
@@ -174,7 +174,7 @@ CMD * ReadCMDs(char * cmdLine, int * commandCount)
     DEBUG_PRINT_GREEN("cmdCount: %d printing command\n", cmdCount);
     for (int i = 0; i < cmdCount; i++)
     {
-        CMD c = *(cmdArr +i);
+        CMD c = **(cmdArr +i);
         DEBUG_PRINT("token count: %d\n", c.tokenCount);
         for (int j = 0; j < c.tokenCount; j++)
         {
@@ -269,7 +269,7 @@ void AddCommand(delimiters delimiter)
     struct command  * newCommand;
     SAFE_MALLOC(newCommand,1);
 
-    newCommand->commandItself=*newCMD;
+    newCommand->commandItself=newCMD;
 
     /*enqueue new command*/
     TAILQ_INSERT_TAIL(&commandHead, newCommand,tailCommand);

@@ -9,7 +9,7 @@
 #include "CallBinary.h"
 #include "delimToString.h"
 
-int ExecCmd(CMD * cmdPointer ,CMD cmd, int * lastRetVal, int lineNum)
+int ExecCmd(CMD ** cmdPointer ,CMD cmd, int * lastRetVal, int lineNum, int cmdCount)
 {
     DEBUG_PRINT_GREEN("entering ExecCmd, linenum: %d\n", lineNum);
     int lrv = *lastRetVal;
@@ -34,7 +34,7 @@ int ExecCmd(CMD * cmdPointer ,CMD cmd, int * lastRetVal, int lineNum)
     if(IsExit==0) 
     {
         DEBUG_PRINT_GREEN("ExecCmd: caling myExit()");
-        int ret = MyExit(cmdPointer, cmd, lrv);
+        int ret = MyExit(cmdPointer, cmd, lrv, cmdCount);
         //exit failed
         *lastRetVal = ret;
         return ret;
