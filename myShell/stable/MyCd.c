@@ -44,6 +44,11 @@ int MyCd(CMD cmd)
         {
             //cd -     go to OLDPWD
             char * oldPwd = getenv("OLDPWD");
+            if(oldPwd==NULL)
+            {
+                DEBUG_PRINT_GREEN("OLDPWD is null");
+                oldPwd = "/";
+            }
             DEBUG_PRINT_GREEN("cd %s   -OLDPWD\n", oldPwd);
             printf("%s\n", oldPwd);
             int ret = Cd(oldPwd);

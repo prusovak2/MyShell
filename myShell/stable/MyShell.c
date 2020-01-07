@@ -36,7 +36,11 @@ int main(int argc, char ** argv)
          case 'c':
             //*********** -C OPTION ****************************
             DEBUG_PRINT("Given -c, arg: %s\n", optarg);
-            char * line = optarg;
+            char * line;
+            int len = strlen(optarg);
+            SAFE_MALLOC(line,(len+1));
+            strcpy(line,optarg);
+            //char * line = optarg;
             ExecLine(line, &lastRetVal, 1); //just one line as arg of -c
             return lastRetVal;
          case ':':
@@ -55,6 +59,10 @@ int main(int argc, char ** argv)
       DEBUG_PRINT("READING FILE: %s\n", argv[optind]);
         //read file
         int fd = open(argv[optind], O_RDONLY);
+        if(fd == -1)
+        {
+            err(42,"cannot open file");
+        }
         char * line=NULL;
         int retVal=1;
         int lineNum =1;
@@ -82,7 +90,7 @@ int main(int argc, char ** argv)
        int len2 = strlen(mysh);
        
        prompt = strdup(pwd);
-       SAFE_REALLOC(prompt, len +len2);
+       SAFE_REALLOC(prompt, (len +len2+1));
        DEBUG_PRINT("concatenating prompt\n");
        DEBUG_PRINT("pwd: %s\n", pwd);
        DEBUG_PRINT("prompt: %s\n", prompt);
