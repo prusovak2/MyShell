@@ -25,3 +25,7 @@ lex.yy.o: FlexReadCmds.c
 clean:
 	rm *.o mysh lex.yy.c
 
+
+	 
+
+

@@ -189,5 +189,5 @@ void handle_sigint(int sig)
     rl_on_new_line(); // Regenerate the prompt on  newline
     rl_replace_line("", 0); // Clear the previous text
     rl_redisplay();
-    lastRetVal= 128 + sig; 
+    lastRetVal= 128 + sig; //should this be here? ctrl+c changes ret val of last cmd...
 } 

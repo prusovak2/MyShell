@@ -6,10 +6,11 @@ INCLUDE = -I headers
 READLINE = -lreadline
 
 OBJ = CallBinary.o delimToString.o ExecCmd.o  MyCd.o MyExit.o MyShell.o lex.yy.o ReadLineFromFile.o
+SRC = CallBinary.c delimToString.c ExecCmd.c  MyCd.c MyExit.c MyShell.c ReadLineFromFile.c
 
 all: Dmysh
 
-.PHONY : all clean 
+.PHONY : all clean cStyle
 
 Dmysh: $(OBJ) 
 	$(CC) $(CFLAGS) $(INCLUDE) $(DFLAGS) $(OBJ) -o Dmysh $(FLEXFLAGS) $(READLINE)
@@ -24,3 +25,12 @@ lex.yy.o: FlexReadCmds.c
 
 clean:
 	rm *.o Dmysh lex.yy.c
+
+cStyle: $(SRC)
+	clang-format CallBinary.c > CSTYLECallBinary.c
+	clang-format delimToString.c > CSTYLECdelimToString.c
+	clang-format ExecCmd.c > CSTYLEExecCmd.c
+	clang-format MyCd.c > CSTYLEMyCd.c
+	clang-format MyExit.c > CSTYLEMyExit.c
+	clang-format MyShell.c > CSTYLEMyShell.c
+	clang-format ReadLineFromFile.c > CSTYLEReadLineFromFile.c
