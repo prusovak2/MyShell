@@ -86,6 +86,7 @@ int Cd(char *dir) {
     // error while chdir(), errno is set
     warn("cd: %s", dir);
     DEBUG_PRINT("error message based on errno should be appended\n");
+    free(dirBeforeChange);
     return 1;
   } else {
     // set coresponding PWD and OLDPWD
