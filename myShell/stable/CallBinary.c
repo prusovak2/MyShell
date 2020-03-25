@@ -9,6 +9,7 @@
 #include <err.h>
 #include <sys/wait.h>
 
+#include "delimToString.h"
 #include "debugPrint.h"
 #include "CallBinary.h"
 #include "MyShell.h"

@@ -15,7 +15,7 @@ int ExecCmd(CMD ** cmdPointer ,CMD cmd, int * lastRetVal, int lineNum, int cmdCo
     int lrv = *lastRetVal;
     DEBUG_PRINT("lrv: %d\n", lrv);
     
-    if(cmd.delim!=semicolon && cmd.delim!= newLine)
+    /*if(cmd.delim!=semicolon && cmd.delim!= newLine)
     {
         //TODO:remove for a phase 2!!!
         //delim < >> > |
@@ -23,7 +23,7 @@ int ExecCmd(CMD ** cmdPointer ,CMD cmd, int * lastRetVal, int lineNum, int cmdCo
         warnx("error: %d : syntax error near unexpected token \'%s\'", lineNum, stringDelim);
         *lastRetVal = 73; //my special ret val for syntax error
         return 73;
-    }
+    }*/
 
 
     //syntax error

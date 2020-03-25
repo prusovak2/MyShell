@@ -18,6 +18,7 @@
 #include "delimToString.h"
 #include "MyShell.h"
 #include "ReadLineFromFile.h"
+#include "pipeline.h"
 
 
 void handle_sigint(int sig);
@@ -115,6 +116,7 @@ int main(int argc, char ** argv)
    }
 
     rl_clear_history();
+    DEBUG_PRINT_GREEN("RET VAL FROM SHELL: %d\n",lastRetVal);
    return lastRetVal;
    
 }
@@ -126,8 +128,7 @@ int ExecLine(char * line, int * lastRetVal, int lineNum)
     DEBUG_PRINT("Myshell: ENTERING execLine, cmdCount: %d\n", cmdCount);
     CMD ** Pcmds = ReadCMDs(line, &cmdCount);
     free(line);
-    //CMD * cmds = *Pcmds;
-
+    
     //just debug print
     DEBUG_PRINT_GREEN("EXEC LINE: printing cmds read:");
     DEBUG_PRINT_GREEN("cmdCount: %d\n", cmdCount);
@@ -144,22 +145,69 @@ int ExecLine(char * line, int * lastRetVal, int lineNum)
         #endif // DEBUG
         
         DEBUG_PRINT("delim:%s \n", del);
-    }
+    } 
     DEBUG_PRINT("\n\n");
     UNEXPECTED_PRINT("***********EXECUTING CMDS******************\n");
 
+    //pipeline check
+    int numOfPipes = 0;
+    int startIndex;
+    int brokenPipe=0;
     //execute cmds
     int ret;
     for(int i = 0; i < cmdCount; i++)
     {
         CMD * curr = *(Pcmds+i);
-        ret =ExecCmd(Pcmds, *curr, lastRetVal, lineNum, cmdCount);
-
-        DEBUG_PRINT("ret val of execCmd: %d\n", ret);
+        if(curr->delim == pipeChar)
+        {
+            if(numOfPipes==0)
+            {
+                startIndex=i;               
+            }
+            numOfPipes++;
+            if(curr->tokenCount<=0) //syntax error, only |, no cmd
+            {
+                brokenPipe = 1;
+                if(i==cmdCount-1)
+                {
+                    warnx("error: %d : syntax error near unexpected token \'|\'", lineNum);
+                    ret = 73; //syntax error return value
+                    *lastRetVal=73;
+                    break;
+                }
+            }
+        }
+        else if(numOfPipes != 0) //delim different from pipe and some pipeline was read
+        {
+            if(brokenPipe) //pipeline is flawed - its not gonna ge created
+            {
+                brokenPipe=0;
+                numOfPipes=0;
+                warnx("error: %d : syntax error near unexpected token \'|\'", lineNum);
+                ret =73; //syntax error return value
+                *lastRetVal=73;
+            }
+            else
+            {
+                DEBUG_PRINT("create pipeline containing %d pipes\n starting at index %d\n", numOfPipes, startIndex);
+            
+                ret= pipeline(numOfPipes,startIndex,Pcmds,cmdCount);
+                *lastRetVal=ret;
+                numOfPipes = 0;
+                DEBUG_PRINT("THAT ret val of piplene.c: %d\n", ret);
+            }
+        }
+        else
+        {
+            //simple command -  no pipeline or redirection
+            ret = ExecCmd(Pcmds, *curr, lastRetVal, lineNum, cmdCount);
+            DEBUG_PRINT("THAT ret val of execCmd: %d\n", ret);
+        }
     }
-    
-    freeCmds(Pcmds, cmdCount);
-    return ret;
+    freeCmds(Pcmds, cmdCount); 
+    DEBUG_PRINT_GREEN("RETURN VAL: %d\n", *lastRetVal);
+    return ret; //useles value that is never used... Why have I deciced to return it?
+    //Im already using lastRetVal param to propagete retVal of last cmd to main
 }
 
 void freeCmds(CMD ** Pcmds, int cmdCount)
