@@ -72,10 +72,10 @@ int WaitForChild(pid_t childPID)
     //int timeout = 1000000;
     int wstatus;
     DEBUG_PRINT("start waiting for child\n");
-    int ret = waitpid(childPID, &wstatus, WNOHANG);
+    int ret = waitpid(childPID, &wstatus,0);
     
-    while (0 == waitpid(childPID , &wstatus , WNOHANG)) 
-  {
+   // while (0 == waitpid(childPID , &wstatus , WNOHANG)) 
+ // {
    /* timeout -= 1000;
     if ( timeout < 0 ) 
     {
@@ -83,7 +83,7 @@ int WaitForChild(pid_t childPID)
             return -1;
     }
     usleep(1000); */
-  }
+ // }
 
     if(ret == -1)
     {

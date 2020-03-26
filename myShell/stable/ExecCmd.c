@@ -29,7 +29,6 @@ int ExecCmd(CMD ** cmdPointer ,CMD cmd, int * lastRetVal, int lineNum, int cmdCo
     //syntax error
     if(cmd.tokenCount<=0)
     {
-        //TODO: exit on syntax error?
         //empty cmd - containts only delim - synax error
         char * stringDelim = delimToString(cmd.delim);
         warnx("error: %d : syntax error near unexpected token \'%s\'", lineNum, stringDelim);
