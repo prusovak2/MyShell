@@ -36,6 +36,20 @@ TAILQ_HEAD(commands, command) commandHead;
 int tokCount=0;
 int cmdCount=0;
 
+//input / output file expected as another word
+int inExpected=0;
+int outExpected=0;
+
+//global storage for redirection data
+char * currInFile = NULL;
+char * currOutFile = NULL;
+char flawed=0;
+short int append;
+
+//is currently some relavant file name stored?
+int inFileRead=0;
+int outFileRead=0;
+
 %}
 
 /*REGEX PART */
@@ -50,69 +64,130 @@ int cmdCount=0;
 [ \t]+ {
     /*white chars*/
     DEBUG_PRINT("White char\n");
-
 }
 
->>|<|;|\||> {
-    /*delimiter*/
+;|\| {
+    /*delimiter -  ; or | */
     DEBUG_PRINT("delimiter: %s\n", yytext);
+
+    char c = yytext[0];
+    if(inExpected || outExpected)
+    {
+        DEBUG_PRINT_YELLOW("file name for redirection expected, delim %c found.\n", c);
+        flawed =1;
+    }
     delimiters delim;
 
-   
-    if(0 == strcmp(yytext, ">>"))
+    switch (c)
+        {
+        case ';':
+            delim = semicolon;
+            break;
+        case '|':
+            delim = pipeChar;
+            break;    
+        default:       
+            UNEXPECTED_PRINT("wierd delim\n");
+            break;
+        }
+    AddCommand(delim);
+}
+
+>>|<|> {
+    /*redirection*/
+    char c = yytext[0];
+    if(inExpected || outExpected)
     {
-        delim = reRightAppend;
+        DEBUG_PRINT_YELLOW("unexpected redir char %c\n", c);
+        //more redir chars - what to do?
+        //TODO: set inEXpected, outExpected to 0?
+        flawed = c;        
+    }
+    else if(0 == strcmp(yytext, ">>"))
+    {
+        DEBUG_PRINT_YELLOW("redir char >>\n");
+        outExpected=1;
+        append=1;
+    }
+    else if(c=='>')
+    {
+        DEBUG_PRINT_YELLOW("redir char %c\n",c);
+        outExpected=1;
+        append=0;
+    }
+    else if(c=='<')
+    {
+        DEBUG_PRINT_YELLOW("redir char %c\n",c);
+        inExpected=1;
     }
     else
     {
-        char c = yytext[0];
-        switch (c)
-        {
-            case '<':
-                delim = reLeft;
-                break;
-            case '>':
-                delim = reRight;
-                break;
-            case ';':
-                delim = semicolon;
-                break;
-            case '|':
-                delim = pipeChar;
-                break;    
-            default:       
-                UNEXPECTED_PRINT("wier delim");
-                break;
-        }
+        UNEXPECTED_PRINT("unexpected redirection: %c - regex problem\n", c);
     }
-
-    AddCommand(delim);
 }
 
 [^\n\r\t\f \v<>;\|]+ {
     /*word*/
     DEBUG_PRINT("word: %s\n", yytext);
-    //DEBUG_PRINT("%d\n", yytext[yyleng]); //yytext null terminated
    
     char * word = NULL;
     SAFE_MALLOC(word, yyleng+1);
-    
     strcpy(word, yytext);  /*strcpy(destination, source)*/
+    int lenght = strlen(word);
 
-    //int len = strlen(word);
-    //UNEXPECTED_PRINT("word: %s, yyleng: %d, len: %d\n", word, yyleng, len);
-    //DEBUG_PRINT("Copied string: %s\n", word);
-    AddToken(word); 
-    free(word);
-    
+    if(inExpected)
+    {
+        //word is supossed to be an input file name
+        DEBUG_PRINT_YELLOW("new input filename: %s\n", word);
+
+        if(currInFile!=NULL)
+        {
+             free(currInFile);
+        }
+        SAFE_MALLOC(currInFile, lenght+1);
+        strcpy(currInFile, word);
+        
+        DEBUG_PRINT_YELLOW("currInFile: %s\n", currInFile);
+        inFileRead=1;
+        inExpected=0;
+        free(word);
+    }
+    else if(outExpected)
+    {
+        //word is supossed to be an output file name
+        DEBUG_PRINT_YELLOW("new output filename: %s\n", word);
+
+         if(currOutFile!=NULL)
+        {
+             free(currOutFile);
+        }
+        SAFE_MALLOC(currOutFile,lenght+1);
+        strcpy(currOutFile, word);
+
+        DEBUG_PRINT_YELLOW("currOutFile: %s\n", currOutFile);
+        outFileRead=1;        
+        outExpected=0;
+        free(word);
+    }
+    else
+    {
+        //ordinary  token
+        AddToken(word); 
+        free(word);
+    }
 }
 
 \n {
     /*newline*/
     DEBUG_PRINT("newline\n");
+    if(inExpected || outExpected)
+    {
+        DEBUG_PRINT_YELLOW("file name for redirection expected, NEWLINE found.\n");
+        flawed =1;
+    }
     if(tokCount>0)
     {
-        DEBUG_PRINT("last command ended with newline");
+        DEBUG_PRINT("last command ended with newline\n");
         AddCommand(newLine);
     }
 }
@@ -146,7 +221,9 @@ CMD ** ReadCMDs(char * cmdLine, int * commandCount)
     TAILQ_INIT(&tokenHead);
     TAILQ_INIT(&commandHead);
 
-    yy_scan_string(cmdLine);  //TODO: uncomment!
+
+
+    yy_scan_string(cmdLine);  
     yylex();
 
     /*no delim after the last cmd, some unprocessed tokens remaining in token que*/
@@ -193,12 +270,16 @@ CMD ** ReadCMDs(char * cmdLine, int * commandCount)
         free(p);
         p=NULL;
     }
-
+    //FREE REDIRECTION STRING STORAGE
+    free(currOutFile);
+    free(currInFile);
+    currInFile = NULL;
+    currOutFile = NULL;
 
     *commandCount = cmdCount;
     cmdCount=0;
     yylex_destroy();
-    DEBUG_PRINT_GREEN("LEAVING READCMDs, CMD count local: %d, cmd count returned %d", cmdCount, *commandCount);
+    DEBUG_PRINT_GREEN("LEAVING READCMDs, CMD count local: %d, cmd count returned %d\n", cmdCount, *commandCount);
     return cmdArr;
 }
 
@@ -252,7 +333,7 @@ void AddCommand(delimiters delimiter)
         p=NULL;
     }
 
-    /*just debud print*/
+    /*just debug print*/
     UNEXPECTED_PRINT("tokcount: %d printing command\n", tokCount);
     for (int i = 0; i < tokCount; i++)
     {
@@ -260,10 +341,75 @@ void AddCommand(delimiters delimiter)
     }
     DEBUG_PRINT("\n");
 
-    /*initialize new CMD*/
+    /*REDIRECTION*/
+    if(inFileRead || outFileRead)
+    {
+        DEBUG_PRINT_YELLOW("creating REDIR STRUCT\n");
+        REDIR  * newRedir;
+        SAFE_MALLOC(newRedir,1);
+        
+        //output
+         if(outFileRead)
+        {
+            char * copiedOutFile = NULL;
+            int lenght = strlen(currOutFile); /*returns lenght excluding terminating null char*/
+            SAFE_MALLOC(copiedOutFile, (lenght+1));
+            DEBUG_PRINT_YELLOW("currOutFile: %s\n", currOutFile);
+            strcpy(copiedOutFile, currOutFile);
+            DEBUG_PRINT_YELLOW("copied output: %s\n", copiedOutFile);
+
+            newRedir->output = copiedOutFile;
+            DEBUG_PRINT_YELLOW("output file: %s\n", newRedir->output);
+
+            //this should free word
+            //free(*currOutFile);
+            outFileRead=0;
+
+            newRedir->append=append;
+            DEBUG_PRINT_YELLOW("append: %d\n", newRedir->append);
+            append=0;
+        }
+        else
+        {
+            newRedir->output = NULL;
+        }
+
+        //input
+        if(inFileRead)
+        {
+            char * copiedInFile = NULL;
+            int lenght = strlen(currInFile); /*returns lenght excluding terminating null char*/
+            SAFE_MALLOC(copiedInFile, (lenght+1));
+            DEBUG_PRINT_YELLOW("currInFile: %s\n", currInFile);
+            strcpy(copiedInFile, currInFile);
+            DEBUG_PRINT_YELLOW("copied input: %s\n", copiedInFile);
+
+            newRedir->input = copiedInFile;
+            DEBUG_PRINT_YELLOW("input file: %s\n", newRedir->input);
+
+            //this should free word
+            //free(*currInFile);
+            //*currInFile=NULL;
+            inFileRead=0;
+        }
+        else
+        {
+            newRedir->input = NULL;
+        }
+
+        newCMD->redir = newRedir;
+    }
+    else
+    {
+        newCMD->redir = NULL;
+    }
+    /*initialize new CMD's other parts then redir*/
     newCMD->tokens = toks;
     newCMD->tokenCount = tokCount;
     newCMD->delim = delimiter;
+    newCMD->flawedRedir = flawed;
+
+    DEBUG_PRINT_YELLOW("flawed: %d\n", newCMD->flawedRedir);
 
     /*alloc structure to store CMD in que*/
     struct command  * newCommand;
@@ -274,6 +420,7 @@ void AddCommand(delimiters delimiter)
     /*enqueue new command*/
     TAILQ_INSERT_TAIL(&commandHead, newCommand,tailCommand);
 
+    flawed=0;
     tokCount=0;
     cmdCount++;
 }
