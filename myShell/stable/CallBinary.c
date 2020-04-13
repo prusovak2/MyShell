@@ -14,6 +14,7 @@
 #include "CallBinary.h"
 #include "MyShell.h"
 #include "types.h"
+#include "redir.h"
 
 void handle_sigint_child(int sig);
 
@@ -47,54 +48,12 @@ int CallBinary(char * const comandLine[], REDIR * redirP)
     else if(pid==0)    
     {
         //child
-        if(redirP !=NULL)
+        if(redirP != NULL)
         {
             //REDIRECTION
-            if(redirP->input != NULL)
-            {   
-                DEBUG_PRINT_YELLOW("redirecting stdin to %s\n", redirP->input);
-                int fd;            
-	            if ((fd = open(redirP->input, O_RDONLY)) == -1)
-                {
-                    err(1,"%s: error while opening the file",redirP->output);
-                    //warnx("%s: no such file",redirP->input);
-                    //return or exit
-                }
-                DEBUG_PRINT_YELLOW("< opened sucessfully\n");   
-                close(0); //close stdin
-                dup(fd);  //duplicate file fd to stdin
-                close(fd); //duplicated fd no longer needed
-            }
-            if(redirP->output!=NULL)
-            {
-                DEBUG_PRINT_YELLOW("redirecting stdout to %s\n", redirP->output);
-                int fd;
-                if(redirP->append)
-                {
-                    DEBUG_PRINT_YELLOW("Append\n");
-                    if ((fd = open(redirP->output, O_WRONLY | O_CREAT | O_APPEND, 0666)) == -1)
-                    {
-                        err(1,"%s: error while opening the file",redirP->output);
-                         //warnx("%s: error while opening the file",redirP->output);
-                         //exit(1);
-                    }
-                    DEBUG_PRINT_YELLOW(">> opened sucessfully\n");                  
-                }
-                else
-                {
-                    if ((fd = open(redirP->output, O_WRONLY | O_CREAT | O_TRUNC, 0666)) == -1)
-                    {
-                        err(1,"%s: error while opening the file",redirP->output);
-                         //warnx("%s: error while opening the file",redirP->output);
-                         //exit(1);
-                    } 
-                    DEBUG_PRINT_YELLOW("> opened sucessfully\n");     
-                }
-                close(1); //close stdout
-                dup(fd); //duplicate file fd to stdin
-                close(fd); //duplicated fd no longer needed               
-            }
+            redir(redirP);
         }
+
         DEBUG_PRINT_TO_STDERR("CallBin: preparing to execute child\n");
         int execErr =execvp(comandLine[0],comandLine);
         if(execErr==-1)

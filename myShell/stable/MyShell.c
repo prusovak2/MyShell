@@ -191,7 +191,7 @@ int ExecLine(char * line, int * lastRetVal, int lineNum)
             {
                 DEBUG_PRINT("create pipeline containing %d pipes\n starting at index %d\n", numOfPipes, startIndex);
             
-                ret= pipeline(numOfPipes,startIndex,Pcmds,cmdCount);
+                ret= pipeline(numOfPipes,startIndex,Pcmds,cmdCount, lineNum);
                 *lastRetVal=ret;
                 numOfPipes = 0;
                 DEBUG_PRINT("THAT ret val of piplene.c: %d\n", ret);

@@ -9,11 +9,12 @@
 #include "types.h"
 #include "debugPrint.h"
 #include "safeAlloc.h"
+#include "redir.h"
 
 #define WRITE_END 1
 #define READ_END 0
 
-int pipeline(int numOfPipes, int startIndex, CMD ** cmds, int cmdCount)
+int pipeline(int numOfPipes, int startIndex, CMD ** cmds, int cmdCount, int lineNum)
 {
     DEBUG_PRINT("Entering pipeline.c\n");
     //initialize variable containing return value somehow
@@ -71,7 +72,20 @@ int pipeline(int numOfPipes, int startIndex, CMD ** cmds, int cmdCount)
                     close(pipes[j][READ_END]);
                 }
             }
-            if(i<numOfPipes)
+            //REDIRECTON
+            if(currCmd->flawedRedir)
+            {
+                DEBUG_PRINT_YELLOW("FLAWED REDIRECTION due to %c\n", currCmd->flawedRedir);
+                warnx("error: %d : syntax error near unexpected token \'%c\'", lineNum, currCmd->flawedRedir);
+                retVal = 73; //my special ret val for syntax error
+                return retVal;
+            }
+            if (currCmd->redir != NULL) //redid is REDIR *
+            {
+                redir(currCmd->redir);
+            }
+            
+            if(i<numOfPipes &&( currCmd->redir==NULL || currCmd->redir->output==NULL)) //do not rewrite redirected fds
             {
                 //not in last child
                 //for write end of each pipe
@@ -88,7 +102,7 @@ int pipeline(int numOfPipes, int startIndex, CMD ** cmds, int cmdCount)
                 //just trying it out
                 close(pipes[i][WRITE_END]);
             }        
-            if(i != 0)
+            if(i != 0 && ( currCmd->redir==NULL || currCmd->redir->output==NULL)) //do not rewrite redirected fds
             {
                 //not in first child
                 //for read end of each pipe

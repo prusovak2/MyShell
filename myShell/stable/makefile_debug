@@ -5,8 +5,8 @@ DFLAGS = -g -D DEBUG
 INCLUDE = -I headers 
 READLINE = -lreadline
 
-OBJ = CallBinary.o delimToString.o ExecCmd.o  MyCd.o MyExit.o MyShell.o lex.yy.o ReadLineFromFile.o pipeline.o
-SRC = CallBinary.c delimToString.c ExecCmd.c  MyCd.c MyExit.c MyShell.c ReadLineFromFile.c Pipeline.c
+OBJ = CallBinary.o delimToString.o ExecCmd.o  MyCd.o MyExit.o MyShell.o lex.yy.o ReadLineFromFile.o pipeline.o redir.o
+SRC = CallBinary.c delimToString.c ExecCmd.c  MyCd.c MyExit.c MyShell.c ReadLineFromFile.c Pipeline.c redir.c
 
 all: Dmysh
 
