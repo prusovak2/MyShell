@@ -7,6 +7,7 @@
 #define COLOR_RED     "\x1B[31m"
 #define COLOR_GREEN   "\x1B[32m"
 #define COLOR_YELLOW  "\x1B[33m"
+#define COLOR_KMAG    "\x1B[35m"
 
 //#define DEBUG 
 
@@ -35,12 +36,17 @@
             printf (toPrint);\
             printf (COLOR_RESET);\
         } while (0)
+# define DEBUG_PRINT_TO_STDERR(toPrint...)\
+        do {\
+            fprintf (stderr, toPrint);\
+        } while (0)
 
 #else
 # define DEBUG_PRINT(toPrint...) do {} while (0)
 # define UNEXPECTED_PRINT(toPrint...) do {} while(0)
 # define DEBUG_PRINT_GREEN(toPrint...) do {} while(0)
 # define DEBUG_PRINT_YELLOW(toPrint...) do {} while(0)
+# define DEBUG_PRINT_TO_STDERR(toPrint...) do {} while(0)
 #endif
 
 #endif

@@ -15,17 +15,14 @@ int ExecCmd(CMD ** cmdPointer ,CMD cmd, int * lastRetVal, int lineNum, int cmdCo
     int lrv = *lastRetVal;
     DEBUG_PRINT("lrv: %d\n", lrv);
     
-    /*if(cmd.delim!=semicolon && cmd.delim!= newLine)
+    if(cmd.flawedRedir)
     {
-        //TODO:remove for a phase 2!!!
-        //delim < >> > |
-        char * stringDelim = delimToString(cmd.delim);
-        warnx("error: %d : syntax error near unexpected token \'%s\'", lineNum, stringDelim);
+        DEBUG_PRINT_YELLOW("FLAWED REDIRECTION due to %c\n", cmd.flawedRedir);
+        warnx("error: %d : syntax error near unexpected token \'%c\'", lineNum, cmd.flawedRedir);
         *lastRetVal = 73; //my special ret val for syntax error
         return 73;
-    }*/
 
-
+    }
     //syntax error
     if(cmd.tokenCount<=0)
     {
@@ -43,7 +40,7 @@ int ExecCmd(CMD ** cmdPointer ,CMD cmd, int * lastRetVal, int lineNum, int cmdCo
 
     if(IsExit==0) 
     {
-        DEBUG_PRINT_GREEN("ExecCmd: caling myExit()");
+        DEBUG_PRINT_GREEN("ExecCmd: caling myExit()\n");
         int ret = MyExit(cmdPointer, cmd, lrv, cmdCount);
         //exit failed
         *lastRetVal = ret;
@@ -51,15 +48,15 @@ int ExecCmd(CMD ** cmdPointer ,CMD cmd, int * lastRetVal, int lineNum, int cmdCo
     }
     if(IsCd==0)
     {
-        DEBUG_PRINT_GREEN("ExecCmd: caling MyCd()");
+        DEBUG_PRINT_GREEN("ExecCmd: caling MyCd()\n");
         int ret = MyCd(cmd);
         *lastRetVal = ret;
         return ret;
     }
     else
     {
-        DEBUG_PRINT_GREEN("ExecCmd: caling binary");
-        int ret = CallBinary(cmd.tokens);
+        DEBUG_PRINT_GREEN("ExecCmd: caling binary\n");
+        int ret = CallBinary(cmd.tokens, cmd.redir);
          *lastRetVal = ret;
         return ret;
     }

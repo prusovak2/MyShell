@@ -222,6 +222,21 @@ void freeCmds(CMD ** Pcmds, int cmdCount)
             free(curr->tokens[j]);
         }
         free(curr->tokens);
+
+        if(curr->redir != NULL)
+        {
+            if(curr->redir->input!=NULL)
+            {
+                UNEXPECTED_PRINT("execline: freeing %s \n", curr->redir->input);
+                free(curr->redir->input);
+            }
+            if(curr->redir->output!=NULL)
+            {
+                UNEXPECTED_PRINT("execline: freeing %s \n", curr->redir->output);
+                free(curr->redir->output);
+            }
+            free(curr->redir);
+        }
         free(*(Pcmds+i));
     }
 
