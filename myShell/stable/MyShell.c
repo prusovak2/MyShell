@@ -1,3 +1,4 @@
+#define _XOPEN_SOURCE 700
 #include <stdio.h>
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -26,7 +27,11 @@ void handle_sigint(int sig);
 int lastRetVal =0;
 int main(int argc, char ** argv)
 {
-    signal(SIGINT, handle_sigint);
+    //signal(SIGINT, handle_sigint);
+    struct sigaction act = {0};
+    act.sa_handler = handle_sigint;
+    sigaction(SIGINT, &act, NULL);
+    
 
     int option;
    //  ':' at the starting of the string so compiler can distinguish between '?' and ':'
