@@ -1,8 +1,10 @@
+#define _XOPEN_SOURCE 700
 #include <err.h>
 #include <sys/types.h>
 #include <stdio.h>
 #include <fcntl.h>              
 #include <unistd.h>
+#include <signal.h>
 #include <sys/wait.h>
 
 #include "delimToString.h"
@@ -10,9 +12,15 @@
 #include "debugPrint.h"
 #include "safeAlloc.h"
 #include "redir.h"
+#include "pipeline.h"
 
 #define WRITE_END 1
 #define READ_END 0
+
+void handle_sigint_pipe(int sig);
+
+pid_t * pids;
+int numofForked = 0;
 
 int pipeline(int numOfPipes, int startIndex, CMD ** cmds, int cmdCount, int lineNum)
 {
@@ -38,14 +46,22 @@ int pipeline(int numOfPipes, int startIndex, CMD ** cmds, int cmdCount, int line
 
     int numOfProcesses = numOfPipes+1;
 
-    //alloc array  array of pids
-    pid_t * pids;
+    //alloc array  array of pids    
     SAFE_MALLOC(pids, numOfProcesses);
     //prepare storego for pipe
     int pip[2];
     
     //to store read end fd of previous pipe created
     int in = 0;
+
+    //SIGNAL HANDLING
+    struct sigaction act = { 0 };
+	sigset_t sigset;
+    sigset_t parentSigset;
+	/* Block the SIGINT first. */
+	sigemptyset(&sigset);
+	sigaddset(&sigset, SIGINT);
+	sigprocmask(SIG_BLOCK, &sigset, &parentSigset);
 
 for (int i = 0; i < numOfProcesses; i++)
 {
@@ -54,9 +70,22 @@ for (int i = 0; i < numOfProcesses; i++)
     pipe(pip);
     
     pids[i] = fork();
+    if(pids[i] ==-1)
+    {
+        sigprocmask(SIG_SETMASK, &parentSigset, NULL);
+        errx(1,"pipeline: forking child failed\n");
+    }
+
     if(pids[i]==0)
     {
         //CHILD
+        /* Install SIGINT handler. */
+	    act.sa_handler = handle_sigint_pipe;
+        sigemptyset(&act.sa_mask);
+        act.sa_flags = 0;
+	    sigaction(SIGINT, &act, NULL);
+        sigprocmask(SIG_SETMASK, &parentSigset, NULL);
+
         DEBUG_PRINT_TO_STDERR("child %d, in: %d\n", i, (int)in);
         DEBUG_PRINT_TO_STDERR("child %d started\n",i);
         
@@ -122,6 +151,7 @@ for (int i = 0; i < numOfProcesses; i++)
             }
         }
         //parent
+        numofForked++;
         DEBUG_PRINT_TO_STDERR("PARENT AFTER FORKING CHILD %d\n",i);
         if(in!=0)
         {
@@ -151,8 +181,29 @@ for (int i = 0; i < numOfProcesses; i++)
         }       
     }
 
+    //TO RESET SIGACTION
+    //parent should ignore SIGINT that arrived while he had it blocked, as it was handeled by a child
+    struct sigaction ignore = { 0 };
+    struct sigaction original = { 0 };
+    ignore.sa_handler = SIG_IGN;
+    sigaction(SIGINT, &ignore, &original);
+    sigprocmask(SIG_SETMASK, &parentSigset, NULL);
+    //after ublocking SIGINT, parent should no longer ignore it, blocked SIGINT had already been ignored
+    sigaction(SIGINT, &original, NULL);
+
+
     //cleanup - is it correct?
     free(pids);
-    
+
     return retVal;
+}
+
+void handle_sigint_pipe(int sig) 
+{ 
+  UNEXPECTED_PRINT("handle SIGINT FROM CHILD\n");
+  warnx("Killed by signal %d", sig);
+  for (int i = 0; i < numofForked; i++)
+  {
+      kill(pids[i], sig); 
+  }
 }
