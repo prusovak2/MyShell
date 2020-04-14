@@ -1,3 +1,4 @@
+#define _XOPEN_SOURCE 700
 #include <stdio.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -18,36 +19,40 @@
 
 void handle_sigint_child(int sig);
 
-//TODO: delete main
-
-/*int main()
-{
-    DEBUG_PRINT("precall\n");
-    char * arr[3]={"sleep", "20"};
-    int ret = CallBinary(arr);   
-    DEBUG_PRINT("after call\n");
-    printf("is it gonna be white?\n");
-    UNEXPECTED_PRINT("is this gonna be red?\n");
-    return ret;
-}
-*/
 pid_t childPid;
 
 int CallBinary(char * const comandLine[], REDIR * redirP)
 {
-    signal(SIGINT, handle_sigint_child);
+    struct sigaction act = { 0 };
+
+	sigset_t sigset;
+    sigset_t parentSigset;
+
+	/* Block the SIGINT first. */
+	sigemptyset(&sigset);
+	sigaddset(&sigset, SIGINT);
+	sigprocmask(SIG_BLOCK, &sigset, &parentSigset);
+
     pid_t pid = fork();
     
     childPid = pid;
 
     if(pid ==-1)
     {
+        sigprocmask(SIG_SETMASK, &parentSigset, NULL);
         warnx("CallBinary: forking child failed\n");
         return 1;
     }
     else if(pid==0)    
     {
         //child
+        /* Install SIGINT handler. */
+	    act.sa_handler = handle_sigint_child;
+        sigemptyset(&act.sa_mask);
+        act.sa_flags = 0;
+	    sigaction(SIGINT, &act, NULL);
+        sigprocmask(SIG_SETMASK, &parentSigset, NULL);
+
         if(redirP != NULL)
         {
             //REDIRECTION
@@ -66,12 +71,21 @@ int CallBinary(char * const comandLine[], REDIR * redirP)
         exit(127); //no exec happend, exit child - invalid command
     }
     //parent
+   
     DEBUG_PRINT("Child pid is: %d\n", pid);
     int ret = WaitForChild(pid);
-    signal(SIGINT, handle_sigint);
+
+    //parent should ignore SIGINT that arrived while he had it blocked, as it was handeled by a child
+    struct sigaction ignore = { 0 };
+    struct sigaction original = { 0 };
+    ignore.sa_handler = SIG_IGN;
+    sigaction(SIGINT, &ignore, &original);
+
+    sigprocmask(SIG_SETMASK, &parentSigset, NULL);
+    //after ublocking SIGINT, parent should no longer ignore it, blocked SIGINT had already been ignored
+    sigaction(SIGINT, &original, NULL);
+
     return  ret;
-
-
 }
 
 int WaitForChild(pid_t childPID)
@@ -97,7 +111,7 @@ int WaitForChild(pid_t childPID)
         UNEXPECTED_PRINT("waitForChild: error while waiting\n");
         return 1;
     }
-
+    //sigprocmask(SIG_SETMASK, &parentSigset, NULL);
     DEBUG_PRINT("waiting finished\n");
 
     //take care of return value:
