@@ -37,13 +37,13 @@ int CallBinary(char * const comandLine[], REDIR * redirP)
     
     childPid = pid;
 
-    if(pid ==-1)
+    if(pid == -1)
     {
         sigprocmask(SIG_SETMASK, &parentSigset, NULL);
         warnx("CallBinary: forking child failed\n");
         return 1;
     }
-    else if(pid==0)    
+    else if(pid == 0)    
     {
         //child
         /* Install SIGINT handler. */
@@ -65,22 +65,21 @@ int CallBinary(char * const comandLine[], REDIR * redirP)
         {
             DEBUG_PRINT_TO_STDERR("CallBinary: execvp(%s, args) failed\n", comandLine[0]);
             warnx("command not found: %s", comandLine[0] );
-            //return 127;
             exit (127);
         }        
         exit(127); //no exec happend, exit child - invalid command
     }
+
     //parent
-   
     DEBUG_PRINT("Child pid is: %d\n", pid);
     int ret = WaitForChild(pid);
 
-    //parent should ignore SIGINT that arrived while he had it blocked, as it was handeled by a child
+    //parent should ignore SIGINT that arrived while he had it blocked, as it has already been handeled by a child
     struct sigaction ignore = { 0 };
     struct sigaction original = { 0 };
     ignore.sa_handler = SIG_IGN;
     sigaction(SIGINT, &ignore, &original);
-
+    //unlock SIGINT
     sigprocmask(SIG_SETMASK, &parentSigset, NULL);
     //after ublocking SIGINT, parent should no longer ignore it, blocked SIGINT had already been ignored
     sigaction(SIGINT, &original, NULL);
@@ -90,28 +89,15 @@ int CallBinary(char * const comandLine[], REDIR * redirP)
 
 int WaitForChild(pid_t childPID)
 {
-    //int timeout = 1000000;
     int wstatus;
     DEBUG_PRINT("start waiting for child\n");
     int ret = waitpid(childPID, &wstatus,0);
     
-   // while (0 == waitpid(childPID , &wstatus , WNOHANG)) 
- // {
-   /* timeout -= 1000;
-    if ( timeout < 0 ) 
-    {
-            perror("timeout");
-            return -1;
-    }
-    usleep(1000); */
- // }
-
     if(ret == -1)
     {
         UNEXPECTED_PRINT("waitForChild: error while waiting\n");
         return 1;
     }
-    //sigprocmask(SIG_SETMASK, &parentSigset, NULL);
     DEBUG_PRINT("waiting finished\n");
 
     //take care of return value:
@@ -123,14 +109,12 @@ int WaitForChild(pid_t childPID)
     }
     if(WIFSIGNALED(wstatus))
     {
-        //child terminated by signal
-        ret = WTERMSIG(wstatus) + 128; //ret val= sinal num + 128
+        //child was terminated by a signal
+        ret = WTERMSIG(wstatus) + 128; //ret val = sinal num + 128
         return ret;
     }
     UNEXPECTED_PRINT("Wait for child: end of main was reached even thou it should not be!!!!");
     return 1;
-
-
 }
 
 void handle_sigint_child(int sig) 

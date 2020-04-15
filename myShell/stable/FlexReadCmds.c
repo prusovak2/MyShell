@@ -46,7 +46,7 @@ char * currOutFile = NULL;
 char flawed=0;
 short int append;
 
-//is currently some relavant file name stored?
+//is currently some relevant file name stored?
 int inFileRead=0;
 int outFileRead=0;
 
@@ -99,23 +99,22 @@ int outFileRead=0;
     if(inExpected || outExpected)
     {
         DEBUG_PRINT_YELLOW("unexpected redir char %c\n", c);
-        //more redir chars - what to do?
         //TODO: set inEXpected, outExpected to 0?
         flawed = c;        
     }
     else if(0 == strcmp(yytext, ">>"))
     {
         DEBUG_PRINT_YELLOW("redir char >>\n");
-        outExpected=1;
-        append=1;
+        outExpected = 1;
+        append = 1;
     }
-    else if(c=='>')
+    else if(c == '>')
     {
         DEBUG_PRINT_YELLOW("redir char %c\n",c);
-        outExpected=1;
-        append=0;
+        outExpected = 1;
+        append = 0;
     }
-    else if(c=='<')
+    else if(c == '<')
     {
         DEBUG_PRINT_YELLOW("redir char %c\n",c);
         inExpected=1;
@@ -140,7 +139,7 @@ int outFileRead=0;
         //word is supossed to be an input file name
         DEBUG_PRINT_YELLOW("new input filename: %s\n", word);
 
-        if(currInFile!=NULL)
+        if(currInFile != NULL)
         {
              free(currInFile);
         }
@@ -148,8 +147,8 @@ int outFileRead=0;
         strcpy(currInFile, word);
         
         DEBUG_PRINT_YELLOW("currInFile: %s\n", currInFile);
-        inFileRead=1;
-        inExpected=0;
+        inFileRead = 1;
+        inExpected = 0;
         free(word);
     }
     else if(outExpected)
@@ -157,7 +156,7 @@ int outFileRead=0;
         //word is supossed to be an output file name
         DEBUG_PRINT_YELLOW("new output filename: %s\n", word);
 
-         if(currOutFile!=NULL)
+         if(currOutFile != NULL)
         {
              free(currOutFile);
         }
@@ -165,8 +164,8 @@ int outFileRead=0;
         strcpy(currOutFile, word);
 
         DEBUG_PRINT_YELLOW("currOutFile: %s\n", currOutFile);
-        outFileRead=1;        
-        outExpected=0;
+        outFileRead = 1;        
+        outExpected = 0;
         free(word);
     }
     else
@@ -183,9 +182,9 @@ int outFileRead=0;
     if(inExpected || outExpected)
     {
         DEBUG_PRINT_YELLOW("file name for redirection expected, NEWLINE found.\n");
-        flawed =1;
+        flawed = 1;
     }
-    if(tokCount>0)
+    if(tokCount > 0)
     {
         DEBUG_PRINT("last command ended with newline\n");
         AddCommand(newLine);
@@ -198,24 +197,6 @@ int outFileRead=0;
 %%
 
 /*Code part*/
-/*int main()
-{
-   
-   /TAILQ_INIT(&tokenHead);
-    TAILQ_INIT(&commandHead);
-
-    yylex();
-    char* c;
-    int i;
-    ReadCMDs(c, &i);
-
-  
-
-    DEBUG_PRINT("Main: token count after readCmds: %d\n", tokCount);
-    yylex_destroy();
-    
-} */
-
 CMD ** ReadCMDs(char * cmdLine, int * commandCount)
 {
     TAILQ_INIT(&tokenHead);
@@ -236,17 +217,13 @@ CMD ** ReadCMDs(char * cmdLine, int * commandCount)
     CMD ** cmdArr;
     SAFE_MALLOC(cmdArr, (cmdCount)); /*+1 deleted!!! no terminating null*/
 
-    int i =0;    
+    int i = 0;    
     struct command * iterator;
     TAILQ_FOREACH(iterator, &commandHead, tailCommand)
     {
-        *(cmdArr+i)=(iterator->commandItself);
+        *(cmdArr+i) = (iterator->commandItself);
         i++;       
     }
-
-    //carefull about this, cmdArr not mull terminated
-    //cmdArr[cmdCount]=NULL;
-
     /*just debug print*/
     DEBUG_PRINT_GREEN("cmdCount: %d printing command\n", cmdCount);
     for (int i = 0; i < cmdCount; i++)
@@ -268,16 +245,16 @@ CMD ** ReadCMDs(char * cmdLine, int * commandCount)
         p = TAILQ_FIRST(&commandHead);        
         TAILQ_REMOVE(&commandHead, p, tailCommand);
         free(p);
-        p=NULL;
+        p = NULL;
     }
-    //FREE REDIRECTION STRING STORAGE
+    //free redirection string storage
     free(currOutFile);
     free(currInFile);
     currInFile = NULL;
     currOutFile = NULL;
 
     *commandCount = cmdCount;
-    cmdCount=0;
+    cmdCount = 0;
     yylex_destroy();
     DEBUG_PRINT_GREEN("LEAVING READCMDs, CMD count local: %d, cmd count returned %d\n", cmdCount, *commandCount);
     return cmdArr;
@@ -293,7 +270,7 @@ void AddToken(char* word)
     SAFE_MALLOC(copiedWord, (lenght+1));
     strcpy(copiedWord, word);
 
-    newTok->tokenItself=copiedWord;
+    newTok->tokenItself = copiedWord;
 
     TAILQ_INSERT_TAIL(&tokenHead, newTok,tailToken );
 
@@ -303,25 +280,23 @@ void AddToken(char* word)
 void AddCommand(delimiters delimiter)
 {   
     /*prepare string array for tokens of which command consists*/
-    char ** toks=NULL;
-    SAFE_MALLOC(toks, (tokCount+1));  //+1
+    char ** toks = NULL;
+    SAFE_MALLOC(toks, (tokCount+1)); 
 
     /*prepare CMD - structure to store command*/
     CMD  * newCMD;
     SAFE_MALLOC(newCMD,1);
 
     /*add token from token que to char** toks */
-    int i =0;    
+    int i = 0;    
     struct token * iterator;
     TAILQ_FOREACH(iterator, &tokenHead, tailToken)
     {
-        *(toks+i)=iterator->tokenItself;
+        *(toks+i) = iterator->tokenItself;
         DEBUG_PRINT("iterator: %s toks: %s\n",iterator->tokenItself, *(toks+i));
         i++;       
     }
-    
-   // UNEXPECTED_PRINT("%s\n", *(toks+tokCount-1));
-    (*(toks+tokCount))=(char*)NULL;
+    (*(toks+tokCount)) = (char*)NULL;
 
     /*free token queue*/
     struct token * p;
@@ -330,7 +305,7 @@ void AddCommand(delimiters delimiter)
         p = TAILQ_FIRST(&tokenHead);        
         TAILQ_REMOVE(&tokenHead, p, tailToken);
         free(p);
-        p=NULL;
+        p = NULL;
     }
 
     /*just debug print*/
@@ -360,12 +335,9 @@ void AddCommand(delimiters delimiter)
 
             newRedir->output = copiedOutFile;
             DEBUG_PRINT_YELLOW("output file: %s\n", newRedir->output);
-
-            //this should free word
-            //free(*currOutFile);
             outFileRead=0;
 
-            newRedir->append=append;
+            newRedir->append = append;
             DEBUG_PRINT_YELLOW("append: %d\n", newRedir->append);
             append=0;
         }
@@ -378,7 +350,7 @@ void AddCommand(delimiters delimiter)
         if(inFileRead)
         {
             char * copiedInFile = NULL;
-            int lenght = strlen(currInFile); /*returns lenght excluding terminating null char*/
+            int lenght = strlen(currInFile); 
             SAFE_MALLOC(copiedInFile, (lenght+1));
             DEBUG_PRINT_YELLOW("currInFile: %s\n", currInFile);
             strcpy(copiedInFile, currInFile);
@@ -386,11 +358,7 @@ void AddCommand(delimiters delimiter)
 
             newRedir->input = copiedInFile;
             DEBUG_PRINT_YELLOW("input file: %s\n", newRedir->input);
-
-            //this should free word
-            //free(*currInFile);
-            //*currInFile=NULL;
-            inFileRead=0;
+            inFileRead = 0;
         }
         else
         {

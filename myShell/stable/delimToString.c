@@ -17,7 +17,6 @@ char * delimToString(delimiters delim)
         case newLine:
             res = "\\n";
             break;
-    
         default:
             break;
     }

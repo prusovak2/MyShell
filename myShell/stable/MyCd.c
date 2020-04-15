@@ -10,8 +10,6 @@
 #include "debugPrint.h"
 #include "safeAlloc.h"
 
-//TODO: check whether OLDPWD is initialized
-
 /*returns 0 when change of dir successful, 1 otherwise*/
 int MyCd(CMD cmd)
 {
@@ -24,27 +22,26 @@ int MyCd(CMD cmd)
         DEBUG_PRINT_GREEN("leaving MyCD\n");
         return 1;
     }
-    if(cmd.tokenCount==1)
+    if(cmd.tokenCount == 1)
     {
         //cd without argument - cd $HOME
         char * home = getenv("HOME");
         DEBUG_PRINT_GREEN("cd %s   -HOME\n", home);
         int ret = Cd(home);
 
-        //free(home);
         DEBUG_PRINT_GREEN("leaving MyCD\n");
         return ret;
     }
-    if(cmd.tokenCount==2)
+    if(cmd.tokenCount == 2)
     {
         //cd with one argument - either dir or "-" or "~"
         int cdToPwd = strcmp(cmd.tokens[1], "-");
         int cdToHome = strcmp(cmd.tokens[1], "~");
-        if(cdToPwd==0)
+        if(cdToPwd == 0)
         {
             //cd -     go to OLDPWD
             char * oldPwd = getenv("OLDPWD");
-            if(oldPwd==NULL)
+            if(oldPwd == NULL)
             {
                 DEBUG_PRINT_GREEN("OLDPWD is null");
                 oldPwd = "/";
@@ -52,19 +49,15 @@ int MyCd(CMD cmd)
             DEBUG_PRINT_GREEN("cd %s   -OLDPWD\n", oldPwd);
             printf("%s\n", oldPwd);
             int ret = Cd(oldPwd);
-
-            //free(oldPwd);
             DEBUG_PRINT_GREEN("leaving MyCD\n");
             return ret;            
         }
-        else if(cdToHome==0)
+        else if(cdToHome == 0)
         {
             //cd ~    - cd $HOME
             char * home = getenv("HOME");
             DEBUG_PRINT_GREEN("cd %s   - ~ \n", home);
             int ret = Cd(home);
-
-            //free(home);
             DEBUG_PRINT_GREEN("leaving MyCD\n");
             return ret;
         }
@@ -113,12 +106,9 @@ int Cd(char * dir)
         setenv("OLDPWD", dirBeforeChange, 1);
         free(dirAfterChange);
     }
-
-   
     free(dirBeforeChange);
     DEBUG_PRINT_GREEN("leaving cd\n");
     return 0;
-
 }
 
 char * getCurrDir()

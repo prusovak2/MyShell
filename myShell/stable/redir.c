@@ -18,9 +18,8 @@ void redir(REDIR * redirP)
         int fd;            
         if ((fd = open(redirP->input, O_RDONLY)) == -1)
         {
+            //open sets errno on failure
             err(1,"%s: error while opening the file",redirP->output);
-            //warnx("%s: no such file",redirP->input);
-            //return or exit
         }
         DEBUG_PRINT_YELLOW("< opened sucessfully\n");   
         close(0); //close stdin
@@ -37,8 +36,6 @@ void redir(REDIR * redirP)
             if ((fd = open(redirP->output, O_WRONLY | O_CREAT | O_APPEND, 0666)) == -1)
             {
                 err(1,"%s: error while opening the file",redirP->output);
-                    //warnx("%s: error while opening the file",redirP->output);
-                    //exit(1);
             }
             DEBUG_PRINT_YELLOW(">> opened sucessfully\n");                  
         }
@@ -47,8 +44,6 @@ void redir(REDIR * redirP)
             if ((fd = open(redirP->output, O_WRONLY | O_CREAT | O_TRUNC, 0666)) == -1)
             {
                 err(1,"%s: error while opening the file",redirP->output);
-                    //warnx("%s: error while opening the file",redirP->output);
-                    //exit(1);
             } 
             DEBUG_PRINT_YELLOW("> opened sucessfully\n");     
         }

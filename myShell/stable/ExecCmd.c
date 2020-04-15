@@ -12,7 +12,7 @@
 int ExecCmd(CMD ** cmdPointer ,CMD cmd, int * lastRetVal, int lineNum, int cmdCount)
 {
     DEBUG_PRINT_GREEN("entering ExecCmd, linenum: %d\n", lineNum);
-    int lrv = *lastRetVal;
+    int lrv = * lastRetVal;
     DEBUG_PRINT("lrv: %d\n", lrv);
     
     if(cmd.flawedRedir)
@@ -21,10 +21,8 @@ int ExecCmd(CMD ** cmdPointer ,CMD cmd, int * lastRetVal, int lineNum, int cmdCo
         warnx("error: %d : syntax error near unexpected token \'%c\'", lineNum, cmd.flawedRedir);
         *lastRetVal = 73; //my special ret val for syntax error
         return 73;
-
     }
-    //syntax error
-    if(cmd.tokenCount<=0)
+    if(cmd.tokenCount <= 0)
     {
         //empty cmd - containts only delim - synax error
         char * stringDelim = delimToString(cmd.delim);
@@ -32,7 +30,7 @@ int ExecCmd(CMD ** cmdPointer ,CMD cmd, int * lastRetVal, int lineNum, int cmdCo
         *lastRetVal = 73; //my special ret val for syntax error
         return 73;
     }
-
+    
     int IsCd = strcmp(cmd.tokens[0], "cd");
     DEBUG_PRINT("execcmd: tokens[0]: %s, actuallyCd: %d\n", cmd.tokens[0], IsCd);
     int IsExit = strcmp(cmd.tokens[0], "exit");

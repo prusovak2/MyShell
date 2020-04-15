@@ -24,17 +24,16 @@
 
 void handle_sigint(int sig);
 
-int lastRetVal =0;
+int lastRetVal = 0;
+
 int main(int argc, char ** argv)
 {
-    //signal(SIGINT, handle_sigint);
     struct sigaction act = {0};
     act.sa_handler = handle_sigint;
     sigaction(SIGINT, &act, NULL);
     
-
     int option;
-   //  ':' at the starting of the string so compiler can distinguish between '?' and ':'
+    //  ':' at the starting of the string so compiler can distinguish between '?' and ':'
    while((option = getopt(argc, argv, ":c:")) != -1)
    { 
       switch(option)
@@ -46,19 +45,15 @@ int main(int argc, char ** argv)
             int len = strlen(optarg);
             SAFE_MALLOC(line,(len+1));
             strcpy(line,optarg);
-            //char * line = optarg;
             ExecLine(line, &lastRetVal, 1); //just one line as arg of -c
             return lastRetVal;
          case ':':
-            errx(2,"-%c: option requires an argument", optopt); //2 is ret val of bash for unknown option or missing oprarg
-            
-         case '?': //some unknown options
+            errx(2,"-%c: option requires an argument", optopt); //2 is ret val of bash for unknown option or missing oprarg            
+         case '?': 
             errx(2,"invalid option: %c", optopt);
             
       }
    }
-
-   
    if (optind<argc)
    { 
        //***************************INPUT FROM FILE********************
@@ -69,29 +64,26 @@ int main(int argc, char ** argv)
         {
             err(42,"cannot open file");
         }
-        char * line=NULL;
-        int retVal=1;
-        int lineNum =1;
-        while(retVal!=-1)
+        char * line = NULL;
+        int retVal = 1;
+        int lineNum = 1;
+        while(retVal !=-1)
         {
             line = ReadLineFromFile(&retVal, fd);
             DEBUG_PRINT_GREEN("Myshell: line: %s\n", line);
             ExecLine(line,&lastRetVal,lineNum);
-            //free(line);
             lineNum++;
         }
         close(fd);
-      return lastRetVal; //ret val of last cmd
+      return lastRetVal; 
    }
-   
-
     //***************INTERACTIVE SHELL********************
    while (1)
    {
        //create prompt
        char * pwd = getenv("PWD");   
        char * prompt;
-       char * mysh ="  <mySh> % ";
+       char * mysh = "  <mySh> % ";
        int len = strlen(pwd);
        int len2 = strlen(mysh);
        
@@ -101,29 +93,24 @@ int main(int argc, char ** argv)
        DEBUG_PRINT("pwd: %s\n", pwd);
        DEBUG_PRINT("prompt: %s\n", prompt);
        strcat(prompt, mysh);
-       DEBUG_PRINT("prompt: %s\n", prompt); 
+       DEBUG_PRINT("prompt: %s\n", prompt);
 
        char * line = readline(prompt);
        free(prompt);
        DEBUG_PRINT_GREEN("LINE: %s\n", line);
 
-       if(line==NULL)
+       if(line == NULL)
        {
            DEBUG_PRINT("CTRL+D at the beggining of line, exiting\n");
            exit(lastRetVal);
        }
-
-       //add history
        add_history(line);
-
        //exec cmds +free line
        ExecLine(line, &lastRetVal, 1);
    }
-
     rl_clear_history();
     DEBUG_PRINT_GREEN("RET VAL FROM SHELL: %d\n",lastRetVal);
-   return lastRetVal;
-   
+    return lastRetVal;
 }
 
 int ExecLine(char * line, int * lastRetVal, int lineNum)
@@ -147,17 +134,16 @@ int ExecLine(char * line, int * lastRetVal, int lineNum)
         }
         #ifdef DEBUG
             char * del = delimToString(curr->delim);
-        #endif // DEBUG
-        
+        #endif       
         DEBUG_PRINT("delim:%s \n", del);
     } 
     DEBUG_PRINT("\n\n");
-    UNEXPECTED_PRINT("***********EXECUTING CMDS******************\n");
 
+    UNEXPECTED_PRINT("***********EXECUTING CMDS******************\n");
     //pipeline check
     int numOfPipes = 0;
     int startIndex;
-    int brokenPipe=0;
+    int brokenPipe = 0;
     //execute cmds
     int ret;
     for(int i = 0; i < cmdCount; i++)
@@ -165,15 +151,15 @@ int ExecLine(char * line, int * lastRetVal, int lineNum)
         CMD * curr = *(Pcmds+i);
         if(curr->delim == pipeChar)
         {
-            if(numOfPipes==0)
+            if(numOfPipes == 0)
             {
-                startIndex=i;               
+                startIndex = i;               
             }
             numOfPipes++;
-            if(curr->tokenCount<=0) //syntax error, only |, no cmd
+            if(curr->tokenCount <= 0) //syntax error, only |, no cmd
             {
                 brokenPipe = 1;
-                if(i==cmdCount-1)
+                if(i == cmdCount-1)
                 {
                     warnx("error: %d : syntax error near unexpected token \'|\'", lineNum);
                     ret = 73; //syntax error return value
@@ -186,25 +172,25 @@ int ExecLine(char * line, int * lastRetVal, int lineNum)
         {
             if(brokenPipe) //pipeline is flawed - its not gonna ge created
             {
-                brokenPipe=0;
-                numOfPipes=0;
+                brokenPipe = 0;
+                numOfPipes = 0;
                 warnx("error: %d : syntax error near unexpected token \'|\'", lineNum);
-                ret =73; //syntax error return value
-                *lastRetVal=73;
+                ret = 73; //syntax error return value
+                *lastRetVal = 73;
             }
             else
             {
                 DEBUG_PRINT("create pipeline containing %d pipes\n starting at index %d\n", numOfPipes, startIndex);
             
-                ret= pipeline(numOfPipes,startIndex,Pcmds,cmdCount, lineNum);
-                *lastRetVal=ret;
+                ret = pipeline(numOfPipes,startIndex,Pcmds,cmdCount, lineNum);
+                *lastRetVal = ret;
                 numOfPipes = 0;
                 DEBUG_PRINT("THAT ret val of piplene.c: %d\n", ret);
             }
         }
         else
         {
-            //simple command -  no pipeline or redirection
+            //simple command -  no pipeline
             ret = ExecCmd(Pcmds, *curr, lastRetVal, lineNum, cmdCount);
             DEBUG_PRINT("THAT ret val of execCmd: %d\n", ret);
         }
@@ -230,12 +216,12 @@ void freeCmds(CMD ** Pcmds, int cmdCount)
 
         if(curr->redir != NULL)
         {
-            if(curr->redir->input!=NULL)
+            if(curr->redir->input != NULL)
             {
                 UNEXPECTED_PRINT("execline: freeing %s \n", curr->redir->input);
                 free(curr->redir->input);
             }
-            if(curr->redir->output!=NULL)
+            if(curr->redir->output != NULL)
             {
                 UNEXPECTED_PRINT("execline: freeing %s \n", curr->redir->output);
                 free(curr->redir->output);
@@ -244,11 +230,8 @@ void freeCmds(CMD ** Pcmds, int cmdCount)
         }
         free(*(Pcmds+i));
     }
-
     free(Pcmds);
 }
-
-
 
 void handle_sigint(int sig) 
 { 
